@@ -24,25 +24,36 @@ while (!existePath) {
     if (Directory.Exists(pathIngresado))
     {
         existePath = true;
+        // creamos un objeto directoryInfo para tener informacion del directorio //
+        DirectoryInfo directorio = new DirectoryInfo(pathIngresado);
         Console.WriteLine($"=================== {pathIngresado} =================");
         // mostramos las carpetas //
         Console.WriteLine("CARPETAS DENTRO:");
-        string[] directoriosDentro = Directory.GetDirectories(pathIngresado);
-        foreach (string directorio in directoriosDentro)
+        DirectoryInfo[] subdirectorios = directorio.GetDirectories();
+        foreach (DirectoryInfo subdirectorio in subdirectorios)
         {
-            Console.WriteLine(directorio);
+            Console.WriteLine(subdirectorio.Name);
         }
         // mostramos los archivos //
         Console.WriteLine("ARCHIVOS DENTRO:");
-        string[] archivosDentro = Directory.GetFiles(pathIngresado);
-        foreach (string archivoEncontrado in archivosDentro)
+        FileInfo[] archivosEnDirectorio = directorio.GetFiles();
+        foreach (FileInfo archivo in archivosEnDirectorio)
         {
-            // creamos un objeto file info para obtener informacion del archivos //
-            FileInfo archivo = new FileInfo(archivoEncontrado);
             decimal tamanoKb = (decimal)archivo.Length / 1000;
             tamanoKb = Math.Round(tamanoKb);
             Console.WriteLine($"ARCHIVO: {archivo.Name} -- {tamanoKb} KB");
         }
+
+        // creamos el archivo csv en el directorio //
+        string pathArchivoReporte = @$"{pathIngresado}\reporte_archivos.csv";
+        string contenidoArchivoReporte = string.Empty;
+        foreach (FileInfo archivo in archivosEnDirectorio)
+        {
+            decimal tamanoKb = (decimal)archivo.Length / 1000;
+            tamanoKb = Math.Round(tamanoKb);
+            contenidoArchivoReporte += $"{archivo.Name}, {tamanoKb} KB, {archivo.LastWriteTime.Day}/{archivo.LastWriteTime.Month}/{archivo.LastWriteTime.Year} - {archivo.LastWriteTime.Hour}:{archivo.LastWriteTime.Minute} \n";
+        }
+        File.WriteAllText(pathArchivoReporte, contenidoArchivoReporte);
     }
     else
     {
