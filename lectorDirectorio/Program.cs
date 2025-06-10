@@ -23,8 +23,26 @@ while (!existePath) {
     // determinamos si el directorio existe o si no existe //
     if (Directory.Exists(pathIngresado))
     {
-        Console.WriteLine("se encontro el directorio");
         existePath = true;
+        Console.WriteLine($"=================== {pathIngresado} =================");
+        // mostramos las carpetas //
+        Console.WriteLine("CARPETAS DENTRO:");
+        string[] directoriosDentro = Directory.GetDirectories(pathIngresado);
+        foreach (string directorio in directoriosDentro)
+        {
+            Console.WriteLine(directorio);
+        }
+        // mostramos los archivos //
+        Console.WriteLine("ARCHIVOS DENTRO:");
+        string[] archivosDentro = Directory.GetFiles(pathIngresado);
+        foreach (string archivoEncontrado in archivosDentro)
+        {
+            // creamos un objeto file info para obtener informacion del archivos //
+            FileInfo archivo = new FileInfo(archivoEncontrado);
+            decimal tamanoKb = (decimal)archivo.Length / 1000;
+            tamanoKb = Math.Round(tamanoKb);
+            Console.WriteLine($"ARCHIVO: {archivo.Name} -- {tamanoKb} KB");
+        }
     }
     else
     {
