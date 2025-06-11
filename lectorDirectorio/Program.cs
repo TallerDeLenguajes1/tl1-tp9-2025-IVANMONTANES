@@ -1,4 +1,6 @@
 ﻿// bucle hasta que se ingrese un path valido //
+using System.Text;
+
 bool existePath = false;
 while (!existePath) {
     // pedimos que se ingrese el path no vacio //
@@ -23,37 +25,68 @@ while (!existePath) {
     // determinamos si el directorio existe o si no existe //
     if (Directory.Exists(pathIngresado))
     {
+        // para salir del bucle //
         existePath = true;
-        // creamos un objeto directoryInfo para tener informacion del directorio //
+
         DirectoryInfo directorio = new DirectoryInfo(pathIngresado);
-        Console.WriteLine($"=================== {pathIngresado} =================");
-        // mostramos las carpetas //
-        Console.WriteLine("CARPETAS DENTRO:");
+
+        // obtenemos y mostramos todos los subdirectorios //
         DirectoryInfo[] subdirectorios = directorio.GetDirectories();
-        foreach (DirectoryInfo subdirectorio in subdirectorios)
+        // verificamos que si haya subdirectorios //
+        Console.WriteLine("================= SUBDIRECTORIOS ==================");
+        if (subdirectorios.Length != 0)
         {
-            Console.WriteLine(subdirectorio.Name);
+            foreach (DirectoryInfo subdirectorio in subdirectorios)
+            {
+                Console.WriteLine($"NOMBRE: {subdirectorio.Name}");
+            }
         }
-        // mostramos los archivos //
-        Console.WriteLine("ARCHIVOS DENTRO:");
-        FileInfo[] archivosEnDirectorio = directorio.GetFiles();
-        foreach (FileInfo archivo in archivosEnDirectorio)
+        else
         {
-            decimal tamanoKb = (decimal)archivo.Length / 1000;
-            tamanoKb = Math.Round(tamanoKb);
-            Console.WriteLine($"ARCHIVO: {archivo.Name} -- {tamanoKb} KB");
+            Console.WriteLine("no hay subdirectorios dentro del directorio");
         }
 
-        // creamos el archivo csv en el directorio //
-        string pathArchivoReporte = @$"{pathIngresado}\reporte_archivos.csv";
-        string contenidoArchivoReporte = string.Empty;
-        foreach (FileInfo archivo in archivosEnDirectorio)
+        // obtenemos y mostramos los archivos dentro del directorio //
+        FileInfo[] archivos = directorio.GetFiles();
+        // verificamos que si haya archivos //
+        Console.WriteLine("================= ARCHIVOS ==================");
+        if (archivos.Length != 0)
         {
-            decimal tamanoKb = (decimal)archivo.Length / 1000;
-            tamanoKb = Math.Round(tamanoKb);
-            contenidoArchivoReporte += $"{archivo.Name}, {tamanoKb} KB, {archivo.LastWriteTime.Day}/{archivo.LastWriteTime.Month}/{archivo.LastWriteTime.Year} - {archivo.LastWriteTime.Hour}:{archivo.LastWriteTime.Minute} \n";
+            foreach (FileInfo archivo in archivos)
+            {
+                // obtenemos el tamaño en bytes del archivo //
+                long tamanoBytes = archivo.Length;
+                // lo convertimos a kilobytes //
+                decimal tamanoKilobytes = (decimal)tamanoBytes / 1024;
+                Console.WriteLine($"NOMBRE: {archivo.Name} / TAMAÑO: {tamanoKilobytes:F2} KB");
+            }
         }
-        File.WriteAllText(pathArchivoReporte, contenidoArchivoReporte);
+        else
+        {
+            Console.WriteLine("no hay archivos dentro del directorio");
+        }
+
+        // creamos el archivo //
+        string ruta = Path.Combine(pathIngresado, "reporte_archivos.csv");
+        FileStream archivoCsv = File.Open(ruta, FileMode.Create);
+        // para mostrar a que hace referencia cada columna //
+        string header = $"NOMBRE, TAMAÑO, ULTIMA FECHA DE MODIFICACION{Environment.NewLine}";
+        byte[] cadenaHeaderByte = Encoding.UTF8.GetBytes(header);
+        archivoCsv.Write(cadenaHeaderByte);
+
+        // usamos foreach para obtener las cadenas que vamos a guardar //
+        foreach (FileInfo archivo in archivos)
+        {
+            string nombreArchivo = archivo.Name;
+            long tamanoBytes = archivo.Length;
+            decimal tamanoKilobytes = (decimal)tamanoBytes / 1024;
+            string ultimaFechaModificacion = archivo.LastWriteTime.ToString("dd/MM/yyyy HH:mm:ss");
+            string cadenaArchivo = $"{nombreArchivo}, {tamanoKilobytes:F2} KB, {ultimaFechaModificacion}{Environment.NewLine}";
+            byte[] cadenaArchivoByte = Encoding.UTF8.GetBytes(cadenaArchivo);
+            archivoCsv.Write(cadenaArchivoByte);
+            archivoCsv.Flush();
+        }
+        
     }
     else
     {
